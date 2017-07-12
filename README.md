@@ -6,7 +6,7 @@
 1. `tslackbot_settings.py`を`slackbot_settings.py`にリネーム.
 2. `tmy_mention.py`は`my_mention.py`にリネーム.
 3. エディタで`slackbot_settings.py`の`API_TOKEN`フィールドの値を[自分のbotのトークン](https://api.slack.com/tokens)に置き換えて保存.
-4. エディタで`my_mention.py`の*291行目あたり*の`'token': '0000-000000...'`の0000-000000...を[自分のLegacyToken](https://api.slack.com/custom-integrations/legacy-tokens)に置き換える.
+4. エディタで`my_mention.py`の*288行目あたり*の`'token': '0000-000000...'`の0000-000000...を[自分のLegacyToken](https://api.slack.com/custom-integrations/legacy-tokens)に置き換える.
 5. 2つのトークンを得たslackにアクセスし、botにDMを送る、または#generalなどでbotにリプライを送る. メッセージの内容は次頁を参照.
 
 ### コマンド
@@ -15,7 +15,21 @@
  - `meiro 30 35` -> 30×35の迷路
  - `meiro 10 10 string` -> 10×10の絵文字迷路
 
- ### 一言
- どうやらslack上にuploadした画像は蓄積されていく(勝手に消えない)ようなので、作った迷路はなんとなく消しておいたらいいと思う. また、PIL、requestsはインストールする必要がある.
+### 一言
+どうやらslack上にuploadした画像は蓄積されていく(勝手に消えない)ようなので、作った迷路はなんとなく消しておいたらいいと思う. また、実行する前にPIL、requestsをインストールする必要がある.
  `sudo pip install pillow`
  `sudo pip install requests`
+
+### slackbotじゃない用法
+my_mention.py(この場合tmy_mention.pyのままでもいい)を直接起動する. 画像として保存する場合、243行目から247行目のコメントアウトを外せばいい.
+または全体の末尾に
+```python
+meiro1 = ImageMeiro(40, 40, 1000, 'meiro.jpg')
+meiro1.makeRoute()
+meiro1.save()
+```
+といったふうに付け加えて、
+`python path/to/my_mention.py`
+を実行する.
+
+ちなみにImageMeiroの第一引数は横のコラムの数、第二引数は縦のコラムの数、第三引数は画像のおおまかなサイズ(pixel)、第四引数はファイルの名前となる.
