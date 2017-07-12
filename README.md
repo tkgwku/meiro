@@ -15,6 +15,7 @@
  - `meiro 30 35` -> 30×35の迷路
  - `meiro 10 10 string` -> 10×10の絵文字迷路
 コラム数がある程度増えると生成が完了しないので注意.
+また、絵文字迷路の方は環境によってうまく表示されない可能性があるため非推奨.
 
 ## 一言
 どうやらslack上にuploadした画像は蓄積されていく(勝手に消えない)ようなので、作った迷路はなんとなく消しておいたらいいと思う. また、実行する前にPIL、requestsをインストールする必要がある.
@@ -26,8 +27,8 @@ my_mention.py(この場合tmy_mention.pyのままでもいい)を直接起動す
 または全体の末尾に
 ```python
 meiro1 = ImageMeiro(40, 40, 1000, 'meiro.jpg')
-meiro1.makeRoute()
-meiro1.save()
+if meiro1.makeRoute():
+	meiro1.save()
 ```
 といったふうに付け加えて、
 `python path/to/my_mention.py`

@@ -37,7 +37,7 @@ class AbstractMeiro(object):
                 break
             # restrict loop for 20000 times
             _count += 1
-            if _count > MAX_ROUTE_SEARCH_COUNT:
+            if _count > AbstractMeiro.MAX_ROUTE_SEARCH_COUNT:
                 print('error l38: Too long it takes! Please adjust row or column.')
                 ## debug ##
                 # for pillar in self.pillarsUnoc:
@@ -240,17 +240,17 @@ class ImageMeiro(AbstractMeiro):
         self.img.save(self.fileName)
         print('saved as '+self.fileName)
 
-'''
+
 r = 40
 meiro1 = ImageMeiro(r, r, 480, 'meiro_{0}.jpg'.format(r))
-meiro1.makeRoute()
-meiro1.save()
-'''
+if meiro1.makeRoute():
+    meiro1.save()
+
 
 '''
 meiro2 = StringMeiro(20, 20)
-meiro2.makeRoute()
-print(meiro2.save())
+if meiro2.makeRoute():
+    print(meiro2.save())
 '''
 
 @respond_to(r'^meiro+(.*)')
@@ -281,22 +281,19 @@ def slackBot(message, arg):
     elif mode == 'image':
         file = 'meiro.jpg'
         meiro = ImageMeiro(column, row, 480, file)
-        meiro.makeRoute()
-        meiro.save()
-
-        data = {
-            'token': '0000-000000000000-000000000000-000000000000-00000000000000000000000000000000',
-            'channels': message.body['channel'],
-            'filename': file,
-            'filetype': 'jpg',
-            'title': file
-        }
-        response = requests.post('https://slack.com/api/files.upload', data=data, files={'file': open(file, 'rb')})
+        if meiro.makeRoute():
+            meiro.save()
+            data = {
+                'token': '0000-000000000000-000000000000-000000000000-00000000000000000000000000000000',
+                'channels': message.body['channel'],
+                'filename': file,
+                'filetype': 'jpg',
+                'title': file
+            }
+            response = requests.post('https://slack.com/api/files.upload', data=data, files={'file': open(file, 'rb')})
 
 def parseInt(string, initialvalue):
     try:
         return int(string)
     except ValueError:
         return initialvalue
-
-
