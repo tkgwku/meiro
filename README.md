@@ -32,7 +32,7 @@ my_mention.py(この場合tmy_mention.pyのままでもいい)を直接起動す
 ```python
 meiro1 = ImageMeiro(40, 40, 1000, 'meiro.jpg')
 if meiro1.makeRoute():
-	meiro1.save()
+    meiro1.save()
 ```
 といったふうに付け加えて、
 `python path/to/my_mention.py`

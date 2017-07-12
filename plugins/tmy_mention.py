@@ -240,12 +240,12 @@ class ImageMeiro(AbstractMeiro):
         self.img.save(self.fileName)
         print('saved as '+self.fileName)
 
-
+'''
 r = 40
 meiro1 = ImageMeiro(r, r, 480, 'meiro_{0}.jpg'.format(r))
 if meiro1.makeRoute():
     meiro1.save()
-
+'''
 
 '''
 meiro2 = StringMeiro(20, 20)
