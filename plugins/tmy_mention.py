@@ -291,6 +291,8 @@ def slackBot(message, arg):
                 'title': file
             }
             response = requests.post('https://slack.com/api/files.upload', data=data, files={'file': open(file, 'rb')})
+        else:
+            message.reply('error l295: Too long it takes! Please adjust row and column.')
 
 def parseInt(string, initialvalue):
     try:
