@@ -7,7 +7,8 @@
 2. `tmy_mention.py`は`my_mention.py`にリネーム.
 3. エディタで`slackbot_settings.py`の`API_TOKEN`フィールドの値を[自分のbotのトークン](https://api.slack.com/tokens)に置き換えて保存.
 4. エディタで`my_mention.py`の*288行目あたり*の`'token': '0000-000000...'`の0000-000000...を[自分のLegacyToken](https://api.slack.com/custom-integrations/legacy-tokens)に置き換える.
-5. 2つのトークンを得たslackにアクセスし、botにDMを送る、または#generalなどでbotにリプライを送る. メッセージの内容は次頁を参照.
+5. `run.py`を起動. `python path/to/run.py`
+6. 2つのトークンを得たslackにアクセスし、botにDMを送る、または#generalなどでbotにリプライを送る. メッセージの内容は次頁を参照.
 
 ## コマンド
  - `meiro` -> 30×30の迷路
