@@ -3,15 +3,12 @@
 from slackbot.bot import Bot
 from slackbot.bot import respond_to
 from PIL import Image
-from poster.encode import multipart_encode
-from poster.streaminghttp import register_openers
-import urllib2
 import random
 import itertools
 import requests
-import json
 
 class AbstractMeiro(object):
+    MAX_ROUTE_SEARCH_COUNT = 20000
     def __init__(self, column, row, interval, boldness):
         self.column   = column   # horizontal pillars count plus 1
         self.row      = row      # vertical pillars count plus 1
@@ -40,7 +37,7 @@ class AbstractMeiro(object):
                 break
             # restrict loop for 20000 times
             _count += 1
-            if _count > 20000:
+            if _count > MAX_ROUTE_SEARCH_COUNT:
                 print('error l38: Too long it takes! Please adjust row or column.')
                 ## debug ##
                 # for pillar in self.pillarsUnoc:
