@@ -1,0 +1,6 @@
+*.pyc
+.git
+slackbot_settings.py
+my_mention.py
+.DS_Store
+*.jpg
