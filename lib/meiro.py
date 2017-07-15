@@ -7,7 +7,7 @@ import math
 from PIL import Image
 
 class AbstractMeiro(object):
-    DEBUG = True
+    DEBUG = False
 
     def __init__(self, column, row, interval, boldness):
         self.column   = column   # horizontal pillars count plus 1
