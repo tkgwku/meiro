@@ -1,6 +1,7 @@
 *.pyc
 .git
-slackbot_settings.py
-my_mention.py
+TOKENS.json
 .DS_Store
 *.jpg
+__pycache__
+*.bat

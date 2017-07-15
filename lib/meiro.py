@@ -1,14 +1,14 @@
 # coding: utf-8
 
-from slackbot.bot import Bot
-from slackbot.bot import respond_to
-from PIL import Image
-import random
 import itertools
-import requests
+import random
+import time
+import math
+from PIL import Image
 
 class AbstractMeiro(object):
-    MAX_ROUTE_SEARCH_COUNT = 20000
+    DEBUG = True
+
     def __init__(self, column, row, interval, boldness):
         self.column   = column   # horizontal pillars count plus 1
         self.row      = row      # vertical pillars count plus 1
@@ -16,17 +16,29 @@ class AbstractMeiro(object):
         self.boldness = boldness # width pixels of black line
 
         # unoccupied pillars, (x,y)s list
-        self.pillarsUnoc = [(x,y) for x, y in itertools.product(xrange(1, column), xrange(1, row))] 
+        self.pillarsUnoc = [(x,y) for x, y in itertools.product(range(1, column), range(1, row))]
         # pillars temporarily used in specific phase
         self.pillarsUsed = []
+        # seconds it will take
+        self.expectedSec = self.getExpectedSecond()
+        # how many times loop is executed to make meiro
+        self.finishcount = 0
+        # how long it takes to make meiro
+        self.ms = 0
 
     '''
     ()Z
     make meiro route
     '''
     def makeRoute(self):
+        if self.column < 0 or self.row < 0 or self.column > 150 or self.row > 150:
+            print('error l39: Invalid argument!')
+            return False
         _count = 0
         pillar = (0,0)
+        self.timerStart()
+        maxSearchCount = self.getMaxSearchCount()
+        print('starting {0}*{1} meiro making... it will take {2} seconds...'.format(self.column, self.row, self.expectedSec))
         while True:
             if pillar == (0,0):
                 pillar = self.getUnocPillarRandomly()
@@ -34,14 +46,17 @@ class AbstractMeiro(object):
             pillar = self.makeNext(pillar)
 
             if len(self.pillarsUnoc) == 0:
+                self.finishcount = _count
                 break
             # restrict loop for 20000 times
             _count += 1
-            if _count > AbstractMeiro.MAX_ROUTE_SEARCH_COUNT:
-                print('error l38: Too long it takes! Please adjust row or column.')
+            if _count > maxSearchCount:
+                print('[error l61] Something went wrong!')
                 ## debug ##
-                # for pillar in self.pillarsUnoc:
-                #    self.fillColor(pillar, pillar, (0, 255, 0))
+                if AbstractMeiro.DEBUG:
+                    for pillar in self.pillarsUnoc:
+                        self.fillColor(pillar, pillar, (0, 255, 0))
+                    break
                 return False
 
         # make edge wall
@@ -78,7 +93,7 @@ class AbstractMeiro(object):
 
     '''
     ()V
-    turn temporary pillars into wall 
+    turn temporary pillars into wall
     '''
     def saveChanges(self):
         for (i, pillar) in enumerate(self.pillarsUsed):
@@ -89,8 +104,7 @@ class AbstractMeiro(object):
         self.pillarsUsed = []
 
     def getUnocPillarRandomly(self):
-        rand = random.randint(0, len(self.pillarsUnoc)-1)
-        return self.pillarsUnoc[rand]
+        return self.pillarsUnoc[random.randint(0, len(self.pillarsUnoc)-1)]
 
     '''
     (tuple2, tuple2, tuple3)V
@@ -116,7 +130,7 @@ class AbstractMeiro(object):
         # go up
         if direction == 0:
             return (currentPillar[0], currentPillar[1]-1)
-        # go down 
+        # go down
         elif direction == 1:
             return (currentPillar[0], currentPillar[1]+1)
         # go left
@@ -166,10 +180,43 @@ class AbstractMeiro(object):
     def getProperBoldness(self, column, row, size):
         return int( size / ( 2*max(column, row)+1 )) +1
 
+    '''
+    ()int
+    get expected number of max search count
+    '''
+    def getMaxSearchCount(self):
+        x = math.sqrt(self.column * self.row)
+        return int(0.2258 * math.pow(x, 2.8508) + 25000)
+
+    '''
+    ()float
+    get expectation about how long while-loop takes
+    '''
+    def getExpectedSecond(self):
+        x = math.sqrt(self.column * self.row)
+        return int(0.00000012 * math.pow(x, 4.4769)) / 10
+
+    '''
+    ()V
+    start timer
+    '''
+    def timerStart(self):
+        self.ms = int(time.time() * 1000)
+
+    '''
+    ()V
+    stop timer
+    '''
+    def timerStop(self):
+        self.ms = int(time.time() * 1000) - self.ms
+
+
+
 class State():
     ABORT = 1
     SAVE  = 2
     KEEP  = 3
+
 
 '''
 meiro made of strings
@@ -185,7 +232,7 @@ class StringMeiro(AbstractMeiro):
         ceilY   = min(fromPillar[1], toPillar[1]) * (self.boldness + self.interval)
         bottomY = max(fromPillar[1], toPillar[1]) * (self.boldness + self.interval) + self.boldness # -1
 
-        for x, y in itertools.product(xrange(leftX, rightX), xrange(ceilY, bottomY)): 
+        for x, y in itertools.product(range(leftX, rightX), range(ceilY, bottomY)):
             self.blocks.append((x,y))
 
     '''
@@ -197,7 +244,7 @@ class StringMeiro(AbstractMeiro):
         result = ''
         width  = self.column * self.interval + (self.column + 1) * self.boldness # image width
         height = self.row    * self.interval + (self.row    + 1) * self.boldness # image height
-        for y, x in itertools.product(xrange(0, height), xrange(0, width)): 
+        for y, x in itertools.product(range(0, height), range(0, width)):
             if (x,y) in self.blocks:
                 result += '⬛'
             else:
@@ -205,6 +252,7 @@ class StringMeiro(AbstractMeiro):
             if x == width-1:
                 result += '\n'
         return result
+
 
 '''
 meiro saved as image
@@ -220,7 +268,7 @@ class ImageMeiro(AbstractMeiro):
         imgHeight = row    * self.interval + (row    + 1) * self.boldness # image height
         self.img = Image.new('RGB', (imgWidth, imgHeight)) # canvas
 
-        for i, j in itertools.product(xrange(0, imgWidth), xrange(0, imgHeight)):
+        for i, j in itertools.product(range(0, imgWidth), range(0, imgHeight)):
             self.img.putpixel((i,j), (255,255,255)) # make white canvas
 
     def fillColor(self, fromPillar, toPillar, color):
@@ -229,7 +277,7 @@ class ImageMeiro(AbstractMeiro):
         ceilY   = min(fromPillar[1], toPillar[1]) * (self.boldness + self.interval)
         bottomY = max(fromPillar[1], toPillar[1]) * (self.boldness + self.interval) + self.boldness # -1
 
-        for x, y in itertools.product(xrange(leftX, rightX), xrange(ceilY, bottomY)): 
+        for x, y in itertools.product(range(leftX, rightX), range(ceilY, bottomY)):
             self.img.putpixel((x,y), color)
 
     '''
@@ -238,64 +286,4 @@ class ImageMeiro(AbstractMeiro):
     '''
     def save(self):
         self.img.save(self.fileName)
-        print('saved as '+self.fileName)
-
-'''
-r = 40
-meiro1 = ImageMeiro(r, r, 480, 'meiro_{0}.jpg'.format(r))
-if meiro1.makeRoute():
-    meiro1.save()
-'''
-
-'''
-meiro2 = StringMeiro(20, 20)
-if meiro2.makeRoute():
-    print(meiro2.save())
-'''
-
-@respond_to(r'^meiro+(.*)')
-def slackBot(message, arg):
-    args = arg.split(' ')[1:]
-    column = 30
-    row = 30
-    mode = 'image'
-
-    if len(args) == 1:
-        column = parseInt(args[0], 20)
-        row = column
-    elif len(args) >= 2:
-        column = parseInt(args[0], 20)
-        row = parseInt(args[1], 20)
-        if len(args) >= 3:
-            mode = args[2]
-
-    message.reply('creating a {0}*{1} maze...'.format(column, row))
-
-    if mode == 'string':
-        meiro = StringMeiro(column, row)
-        flag = meiro.makeRoute()
-        if flag:
-            message.reply('\n'+meiro.save())
-        else:
-            message.reply('error l261: Too long it takes! Please adjust row or column.')
-    elif mode == 'image':
-        file = 'meiro.jpg'
-        meiro = ImageMeiro(column, row, 480, file)
-        if meiro.makeRoute():
-            meiro.save()
-            data = {
-                'token': '0000-000000000000-000000000000-000000000000-00000000000000000000000000000000',
-                'channels': message.body['channel'],
-                'filename': file,
-                'filetype': 'jpg',
-                'title': file
-            }
-            response = requests.post('https://slack.com/api/files.upload', data=data, files={'file': open(file, 'rb')})
-        else:
-            message.reply('error l295: Too long it takes! Please adjust row and column.')
-
-def parseInt(string, initialvalue):
-    try:
-        return int(string)
-    except ValueError:
-        return initialvalue
+        print('saved as {0}'.format(self.fileName, self.ms))
