@@ -9,6 +9,8 @@ if meiro1.makeRoute():
     meiro1.timerStop()
     meiro1.save()
 
+    print('(took {} ms)'.format(meiro1.ms))
+
 ### Print As Text (Mac) ###
 '''
 meiro2 = StringMeiro(20, 20)
