@@ -9,12 +9,11 @@ if meiro1.makeRoute():
     if meiro1.DEBUG:
         print('{} counts'.format(meiro1.finishcount))
     meiro1.save()
-    
-'''
-### debug ###
 
+'''
+### debugging ###
 r = '<table><tbody>\n<tr><th>column</th><th>count</th><th>ms</th><th>phases</th></tr>\n'
-for col in range(100, 280, 20):
+for col in range(100, 320, 10):
     analysis = meiro.AbstractMeiro(col, col, 1, 1)
     analysis.makeRoute()
     if analysis.finishcount > 0:
