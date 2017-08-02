@@ -6,7 +6,7 @@ import time
 import math
 from PIL import Image
 
-class AbstractMeiro(object):
+class AbstractMeiro():
     DEBUG = False
 
     def __init__(self, column, row, interval, boldness):
@@ -16,39 +16,65 @@ class AbstractMeiro(object):
         self.boldness = boldness # width pixels of black line
 
         # unoccupied pillars, (x,y)s list
-        self.pillarsUnoc = [(x,y) for x, y in itertools.product(range(1, column), range(1, row))]
+        self.pillarsUnoc = []
         # pillars temporarily used in specific phase
         self.pillarsUsed = []
-        # seconds it will take
-        self.expectedSec = self.getExpectedSecond()
         # how many times loop is executed to make meiro
         self.finishcount = 0
         # how long it takes to make meiro
         self.ms = 0
+        self.timerStart()
+
+        # parameter 1
+        self.phaseCount = int(max(column, row)/20)
+
+        self.phaseUnoc = [[] for i in range(0, self.phaseCount-1)]#[[],[]]
+            
+        for i, j in itertools.product(range(1, column), range(1, row)):
+            self.pillarsUnoc.append((i,j))
+            for k in range(0, self.phaseCount-1):#0,1
+                if self.isIn(i, j, k+1):
+                    self.phaseUnoc[k].append((i,j))
+                    break
+
+        self.phaseLen = [len(x) for x in self.phaseUnoc]
+
+    def isIn(self, i, j, k):
+        return min(i, self.column-i) < k*self.column/(2*self.phaseCount) or min(j, self.row-j) < k*self.row/(2*self.phaseCount)
 
     '''
     ()Z
     make meiro route
     '''
     def makeRoute(self):
-        if self.column < 0 or self.row < 0 or self.column > 150 or self.row > 150:
-            print('error l39: Invalid argument!')
+        if self.column < 0 or self.row < 0:
+            print('error: Invalid argument!')
             return False
+
         _count = 0
         pillar = (0,0)
-        self.timerStart()
-        maxSearchCount = self.getMaxSearchCount()
-        print('starting {0}*{1} meiro making... it will take {2} seconds...'.format(self.column, self.row, self.expectedSec))
+        prevDir = -1
+        phase = 0
+        maxSearchCount = 1000000
+        print('starting {0}*{1} meiro making...'.format(self.column, self.row))
         while True:
+            if phase < self.phaseCount-1 and len(self.phaseUnoc[phase]) < self.phaseLen[phase]/5: # parameter 2
+                phase += 1
+                print('phase {0}/{1}... ({2} sec)'.format(phase, self.phaseCount-1, int(time.time() * 100 - self.ms/10)/100))
+
             if pillar == (0,0):
-                pillar = self.getUnocPillarRandomly()
+                pillar = self.getUnocPillarRandomly(phase)
                 self.pillarsUsed.append(pillar)
-            pillar = self.makeNext(pillar)
+                prevDir = -1
+
+            direction = self.makeNewDirection(prevDir)
+            prevDir = direction
+            pillar = self.makeNext(pillar, direction)
 
             if len(self.pillarsUnoc) == 0:
                 self.finishcount = _count
                 break
-            # restrict loop for 20000 times
+
             _count += 1
             if _count > maxSearchCount:
                 print('[error l61] Something went wrong!')
@@ -58,7 +84,9 @@ class AbstractMeiro(object):
                         self.fillColor(pillar, pillar, (0, 255, 0))
                     break
                 return False
-
+        self.timerStop()
+        if AbstractMeiro.DEBUG:
+            print('{} seconds'.format(self.ms/1000))
         # make edge wall
         self.draw((0,0), (0, self.row))
         self.draw((0,0), (self.column-1, 0))
@@ -78,17 +106,20 @@ class AbstractMeiro(object):
     (tuple2)tuple2
     process the next pillar
     '''
-    def makeNext(self, currentPillar):
-        nextPillar = self.getNextPillar(currentPillar)
+    def makeNext(self, currentPillar, direction):
+        nextPillar = self.getNextPillar(currentPillar, direction)
         state = self.getWallMakingState(nextPillar)
-        self.pillarsUsed.append(nextPillar)
         if state == State.ABORT:
+            if AbstractMeiro.DEBUG:
+                self.debugSave()
             self.pillarsUsed = []
             return (0,0)
         elif state == State.SAVE:
+            self.pillarsUsed.append(nextPillar)
             self.saveChanges()
             return (0,0)
         elif state == State.KEEP:
+            self.pillarsUsed.append(nextPillar)
             return nextPillar
 
     '''
@@ -100,11 +131,31 @@ class AbstractMeiro(object):
             if i <= len(self.pillarsUsed) -2:
                 self.draw(pillar, self.pillarsUsed[i+1])
             if pillar in self.pillarsUnoc:
-                self.pillarsUnoc.remove(pillar)
+                self.rm(pillar)
         self.pillarsUsed = []
 
-    def getUnocPillarRandomly(self):
-        return self.pillarsUnoc[random.randint(0, len(self.pillarsUnoc)-1)]
+    def rm(self, pillar):
+        self.pillarsUnoc.remove(pillar)
+        temp = []
+        for phase in self.phaseUnoc:
+            if pillar in phase:
+                phase.remove(pillar)
+            temp.append(phase)
+        self.phaseUnoc = temp
+        del temp
+
+    '''
+    ()V
+    turn temporary pillars into wall
+    '''
+    def debugSave(self):
+        for (i, pillar) in enumerate(self.pillarsUsed):
+            if i <= len(self.pillarsUsed) -2:
+                self.fillColor(pillar, self.pillarsUsed[i+1], (255, 0, 0))
+
+    def getUnocPillarRandomly(self, phase):
+        tar = self.phaseUnoc[phase] if phase < self.phaseCount-1 else self.pillarsUnoc
+        return tar[random.randint(0, len(tar)-1)]
 
     '''
     (tuple2, tuple2, tuple3)V
@@ -121,12 +172,20 @@ class AbstractMeiro(object):
     def draw(self, fromPillar, toPillar):
         self.fillColor(fromPillar, toPillar, (60, 60, 60))
 
+    def makeNewDirection(self, prev):
+        # 0:up 1:down 2:left 3:right
+        if prev == -1:
+            return random.randint(0, 3)
+        else:
+            _dirs = [1, 0 ,3, 2]
+            del _dirs[prev]
+            return _dirs[random.randint(0, 2)]
+
     '''
     (tuple2)tuple2
     randomly select from pillars next to current one
     '''
-    def getNextPillar(self, currentPillar):
-        direction = random.randint(0, 3) # 0:up 1:down 2:left 3:right
+    def getNextPillar(self, currentPillar, direction):
         # go up
         if direction == 0:
             return (currentPillar[0], currentPillar[1]-1)
@@ -152,11 +211,7 @@ class AbstractMeiro(object):
     return whether the pillar is at edge wall
     '''
     def isAtEdge(self, pillar):
-        flag = pillar[0] == 0
-        flag = flag or pillar[1] == 0
-        flag = flag or pillar[0] == self.column
-        flag = flag or pillar[1] == self.row
-        return flag
+        return pillar[0] == 0 or pillar[1] == 0 or pillar[0] == self.column or pillar[1] == self.row
 
     '''
     (tuple2)State
@@ -172,29 +227,6 @@ class AbstractMeiro(object):
             return State.SAVE
         else:
             return State.KEEP
-
-    '''
-    (int, int, int)int
-    calculate proper boldness and interval from column, row and size
-    '''
-    def getProperBoldness(self, column, row, size):
-        return int( size / ( 2*max(column, row)+1 )) +1
-
-    '''
-    ()int
-    get expected number of max search count
-    '''
-    def getMaxSearchCount(self):
-        x = math.sqrt(self.column * self.row)
-        return int(0.2258 * math.pow(x, 2.8508) + 25000)
-
-    '''
-    ()float
-    get expectation about how long while-loop takes
-    '''
-    def getExpectedSecond(self):
-        x = math.sqrt(self.column * self.row)
-        return int(0.00000012 * math.pow(x, 4.4769)) / 10
 
     '''
     ()V
@@ -217,65 +249,27 @@ class State():
     SAVE  = 2
     KEEP  = 3
 
-
-'''
-meiro made of strings
-'''
-class StringMeiro(AbstractMeiro):
-    def __init__(self, column, row):
-        super(StringMeiro, self).__init__(column, row, 1, 1)
-        self.blocks = []
-
-    def fillColor(self, fromPillar, toPillar, color):
-        leftX  = min(fromPillar[0], toPillar[0]) * (self.boldness + self.interval)
-        rightX = max(fromPillar[0], toPillar[0]) * (self.boldness + self.interval) + self.boldness # -1
-        ceilY   = min(fromPillar[1], toPillar[1]) * (self.boldness + self.interval)
-        bottomY = max(fromPillar[1], toPillar[1]) * (self.boldness + self.interval) + self.boldness # -1
-
-        for x, y in itertools.product(range(leftX, rightX), range(ceilY, bottomY)):
-            self.blocks.append((x,y))
-
-    '''
-    ()String
-    return string meiro
-    @override
-    '''
-    def save(self):
-        result = ''
-        width  = self.column * self.interval + (self.column + 1) * self.boldness # image width
-        height = self.row    * self.interval + (self.row    + 1) * self.boldness # image height
-        for y, x in itertools.product(range(0, height), range(0, width)):
-            if (x,y) in self.blocks:
-                result += '⬛'
-            else:
-                result += '⬜'
-            if x == width-1:
-                result += '\n'
-        return result
-
-
 '''
 meiro saved as image
 '''
 class ImageMeiro(AbstractMeiro):
-    def __init__(self, column, row, size, fileName):
-        prop = self.getProperBoldness(column, row, size)
-        super(ImageMeiro, self).__init__(column, row, prop, prop)
+    def __init__(self, columns, size, fileName):
+        super(ImageMeiro, self).__init__(columns, columns, 1, 1)
 
         self.fileName = fileName
 
-        imgWidth  = column * self.interval + (column + 1) * self.boldness # image width
-        imgHeight = row    * self.interval + (row    + 1) * self.boldness # image height
-        self.img = Image.new('RGB', (imgWidth, imgHeight)) # canvas
+        width = 2 * columns + 1
+        self.magn = (int(size/width) + 1) * width
+        self.img = Image.new('RGB', (width, width)) # canvas
 
-        for i, j in itertools.product(range(0, imgWidth), range(0, imgHeight)):
+        for i, j in itertools.product(range(0, width), range(0, width)):
             self.img.putpixel((i,j), (255,255,255)) # make white canvas
 
     def fillColor(self, fromPillar, toPillar, color):
-        leftX  = min(fromPillar[0], toPillar[0]) * (self.boldness + self.interval)
-        rightX = max(fromPillar[0], toPillar[0]) * (self.boldness + self.interval) + self.boldness # -1
-        ceilY   = min(fromPillar[1], toPillar[1]) * (self.boldness + self.interval)
-        bottomY = max(fromPillar[1], toPillar[1]) * (self.boldness + self.interval) + self.boldness # -1
+        leftX  = min(fromPillar[0], toPillar[0]) * 2
+        rightX = max(fromPillar[0], toPillar[0]) * 2 + 1 # -1
+        ceilY   = min(fromPillar[1], toPillar[1]) * 2
+        bottomY = max(fromPillar[1], toPillar[1]) * 2 + 1 # -1
 
         for x, y in itertools.product(range(leftX, rightX), range(ceilY, bottomY)):
             self.img.putpixel((x,y), color)
@@ -285,5 +279,6 @@ class ImageMeiro(AbstractMeiro):
     save as RGB image file
     '''
     def save(self):
+        self.img = self.img.resize((self.magn, self.magn))
         self.img.save(self.fileName)
-        print('saved as {0}'.format(self.fileName, self.ms))
+        print('saved as {0} ({1}*{1} pixel)'.format(self.fileName, self.magn))

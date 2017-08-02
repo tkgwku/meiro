@@ -12,50 +12,30 @@ fileContent = file.read()
 file.close()
 tokens = json.loads(fileContent)
 
-@respond_to(r'^meiro+(.*)')
+@respond_to(r'^meiro(.*)')
 def meiroResponce(message, arg):
-    args = arg.split(' ')[1:]
-    column = 40
-    row = 40
-    mode = 'image'
+    args = arg.split(r'\s')
+    column = 100
+    if len(args) > 1:
+        column = parseInt(args[1], 100)
 
-    if len(args) == 1:
-        column = parseInt(args[0], 40)
-        row = column
-    elif len(args) >= 2:
-        column = parseInt(args[0], 40)
-        row = parseInt(args[1], 40)
-        if len(args) >= 3:
-            mode = args[2]
+    filename = 'meiro.jpg'
 
-    if mode == 'string':
-        meiro1 = meiro.StringMeiro(column, row)
-        message.reply('creating a {0}*{1} maze...'.format(column, row))
+    meiro1 = meiro.ImageMeiro(column, 480, filename)
+    message.reply('creating a {0}*{0} maze...'.format(column))
 
-        if meiro1.makeRoute():
-            message.reply('\n'+meiro1.save())
-        else:
-            message.reply('[error l38] Please adjust row or column.')
+    if meiro1.makeRoute():
+        meiro1.save()
+        data = {
+            'token': tokens['legacy_token'],
+            'channels': message.body['channel'],
+            'filename': filename,
+            'filetype': 'jpg',
+            'title': filename
+        }
+        response = requests.post('https://slack.com/api/files.upload', data=data, files={'file': open(filename, 'rb')})
     else:
-        filename = 'meiro.jpg'
-
-        meiro1 = meiro.ImageMeiro(column, row, 480, filename)
-        message.reply('creating a {0}*{1} maze...'.format(column, row))
-
-        if meiro1.makeRoute():
-            meiro1.save()
-            data = {
-                'token': tokens['legacy_token'],
-                'channels': message.body['channel'],
-                'filename': filename,
-                'filetype': 'jpg',
-                'title': filename
-            }
-            response = requests.post('https://slack.com/api/files.upload', data=data, files={'file': open(filename, 'rb')})
-            meiro1.timerStop()
-            message.reply('saved as {0} ({1} ms)'.format(filename, meiro1.ms))
-        else:
-            message.reply('[error l58] Please adjust row and column.')
+        message.reply('[error l58] Please adjust columns.')
 
 def parseInt(string, initialvalue):
     try:

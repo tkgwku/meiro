@@ -5,3 +5,4 @@ TOKENS.json
 *.jpg
 __pycache__
 *.bat
+*.xlsx
