@@ -2,6 +2,9 @@
 
 自動で迷路を作ってくれるSlackBotです。~~人生の迷路は嫌でも勝手に作られていくのに~~~
 
+## Image
+![sample](https://raw.githubusercontent.com/tkgwku/meiro-ilas-seminar-2017/master/usage.jpg "sample")
+
 ## 準備
 
 slackbotの作成などはggるときっと幸せになる。<br>
@@ -55,6 +58,8 @@ if meiro1.makeRoute():
 ## 迷路を解く
 
 `solvemaze.py`を実行すれば、outputフォルダ内の迷路jpgから、正解を描き足したバージョンが作成されoutputフォルダ内に保存される。
+
+![solved 200\*200 maze](https://raw.githubusercontent.com/tkgwku/meiro-ilas-seminar-2017/master/output/solve_200_201711091057.jpg "solution sample")
 
 ## Known Issue
 
