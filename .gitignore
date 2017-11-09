@@ -2,7 +2,6 @@
 .git
 TOKENS.json
 .DS_Store
-*.jpg
 __pycache__
 *.bat
 *.xlsx

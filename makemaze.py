@@ -1,10 +1,16 @@
 # coding: utf-8
 
 from lib import meiro
+from time import gmtime, strftime
+import os
 
 ### Save As Image ###
-r = 300
-meiro1 = meiro.ImageMeiro(r, 2000, 'meiro_{0}.jpg'.format(r))
+r = 200
+filename = 'output/meiro_{0}_{1}.jpg'.format(r, strftime("%Y%m%d%H%M", gmtime()))
+directory = os.path.dirname('output/')
+if not os.path.exists(directory):
+    os.makedirs(directory)
+meiro1 = meiro.ImageMeiro(r, 2000, filename)
 if meiro1.makeRoute():
     if meiro1.DEBUG:
         print('{} counts'.format(meiro1.finishcount))

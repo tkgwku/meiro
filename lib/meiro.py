@@ -6,7 +6,7 @@ import time
 import math
 from PIL import Image
 
-class AbstractMeiro():
+class AbstractMeiro(object):
     DEBUG = False
 
     def __init__(self, column, row, interval, boldness):
@@ -26,7 +26,8 @@ class AbstractMeiro():
         self.timerStart()
 
         # parameter 1
-        self.phaseCount = int(max(column, row)/20)
+        #self.phaseCount = int(max(column, row)/20)
+        self.phaseCount = int(max(column, row)/40)
 
         self.phaseUnoc = [[] for i in range(0, self.phaseCount-1)]#[[],[]]
             
@@ -252,7 +253,7 @@ class State():
 '''
 meiro saved as image
 '''
-class ImageMeiro(AbstractMeiro):
+class ImageMeiro(AbstractMeiro, object):
     def __init__(self, columns, size, fileName):
         super(ImageMeiro, self).__init__(columns, columns, 1, 1)
 
@@ -282,3 +283,171 @@ class ImageMeiro(AbstractMeiro):
         self.img = self.img.resize((self.magn, self.magn))
         self.img.save(self.fileName)
         print('saved as {0} ({1}*{1} pixel)'.format(self.fileName, self.magn))
+
+
+class SolveMeiro(object):
+    def __init__(self, path, filename):
+        self.filename = filename
+        print('[loading] {} ...'.format(path))
+        img = Image.open(path, 'r')
+        width, height = img.size
+        print('[loaded] {0} ... (width: {1}px, height: {2}px)'.format(path, width, height))
+
+        boldness = 0
+
+        for x in range(0, width):
+            if not self.isBlack(img.getpixel((x, height-1))):
+                if x == 0:
+                    print('error l33')
+                    quit()
+                else:
+                    boldness = x
+                    break
+
+        self.xlen = int(width/boldness)
+        self.ylen = int(height/boldness)
+
+        print('column: {0}, row: {1}'.format((self.ylen-1)/2, (self.xlen-1)/2))
+        self.blocks = dict()
+
+        #debug_string_array = ['' for i in range(0, self.ylen)]
+
+        for i, j in itertools.product(range(0, self.xlen), range(0, self.ylen)):
+            self.blocks[(i,j)] = 0 if self.isWall((i,j), img, boldness) else 1 # 0 means that area plays role of wall
+            #debug_string_array[j] += '_' if not self.isWall((i,j)) else 'X'
+
+        #debugStr = ''
+        #for line in debug_string_array:
+        #    debugStr += line + '\n'
+
+        #print(debugStr)
+
+        self.goal = (self.xlen-2, 0)
+
+    def solve(self):
+        self.intersections = list()
+        self.loadintersections((1, self.ylen-1), (0, self.ylen), (1, self.ylen-1), 0)
+
+    def isBlack(self, rgb):
+        return rgb[0] < 120 and rgb[1] < 120 and rgb[2] < 120
+
+    def isWall(self, block, img, boldness):
+        sampleX = (block[0] + 0.5) * boldness
+        sampleY = (block[1] + 0.5) * boldness
+
+        sampleX = int(sampleX)
+        sampleY = int(sampleY)
+
+        return self.isBlack(img.getpixel((sampleX,sampleY)))
+
+    def leftOf(self, coord):
+        return (coord[0]-1, coord[1])
+
+    def rightOf(self, coord):
+        return (coord[0]+1, coord[1])
+
+    def forwardOf(self, coord):
+        return (coord[0], coord[1]-1)
+
+    def backwardOf(self, coord):
+        return (coord[0], coord[1]+1)
+
+    def getcoord(self, coord, dirId):
+        if dirId == 0:
+            return self.forwardOf(coord)
+        elif dirId == 1:
+            return self.rightOf(coord)
+        elif dirId == 2:
+            return self.backwardOf(coord)
+        else:
+            return self.leftOf(coord)
+
+    def isout(self, coord):
+        return coord[0] < 0 or coord[0] >= self.ylen or coord[1] < 0 or coord[1] >= self.xlen
+
+    def loadintersections(self, coord, fromCoord, previs, prevdir):
+        nexts = list()
+
+        for x in range(0,4):
+            c = self.getcoord(coord, x)
+            if self.isout(c) or c == fromCoord:
+                continue
+            elif self.blocks[c] == 1: # space
+                nexts.append(x)
+
+        # 通行路
+        if len(nexts) == 1:
+            if self.getcoord(coord, nexts[0]) == self.goal:
+                tup = (self.goal, previs, prevdir)
+                self.intersections.append(tup)
+                # print(intersections)
+                self.save()
+            else:
+                self.loadintersections(self.getcoord(coord, nexts[0]), coord, previs, prevdir)
+        # 行き止まり
+        elif len(nexts) == 0:
+            pass
+        # 交差点
+        elif len(nexts) > 1:
+            tup = (coord, previs, prevdir)
+            self.intersections.append(tup)
+            for nextdir in nexts:
+                if self.getcoord(coord, nextdir) == self.goal:
+                    tup = (self.goal, coord, nextdir)
+                    self.intersections.append(tup)
+                    # print(intersections)
+                    self.save()
+                else:
+                    self.loadintersections(self.getcoord(coord, nextdir), coord, coord, nextdir)
+
+    def save(self):
+        img2 = Image.new('RGB', (self.xlen, self.ylen))
+
+        for x, y in itertools.product(range(0, self.xlen), range(0, self.ylen)):
+            if self.blocks[(x,y)] == 1:
+                img2.putpixel((x,y), (255,255,255))
+            else:
+                img2.putpixel((x,y), (60,60,60))
+
+        #print(intersections)
+
+        self.tploop(self.goal, img2)
+
+        img2 = img2.resize((self.getmgnx(), self.getmgny()))
+        img2.save(self.filename)
+        print('Successfully solved the meiro (saved to solve.jpg)')
+
+    def drawline(self, tpl, img2):
+        to = tpl[0]
+        fro = tpl[1]
+        dire = tpl[2]
+        img2.putpixel(fro, (255,0,150))
+        c1 = self.getcoord(fro, dire)
+        self.loop(c1, fro, to, img2)
+
+    def loop(self, coord, fromCoord, to, img2):
+        if coord == to:
+            img2.putpixel(to, (255,0,150))
+        else:
+            for x in range(0,4):
+                c2 = self.getcoord(coord, x)
+                if self.isout(c2) or c2 == fromCoord:
+                    pass
+                elif c2 == to:
+                    img2.putpixel(coord, (255,0,150))
+                    img2.putpixel(to, (255,0,150))
+                elif self.blocks[c2] == 1: # space
+                    img2.putpixel(coord, (255,0,150))
+                    self.loop(c2, coord, to, img2)
+
+    def tploop(self, coord,img2):
+        for tpl in self.intersections:
+            if tpl[0] == coord:
+                self.drawline(tpl, img2)
+                self.tploop(tpl[1],img2)
+
+    def getmgnx(self):
+        return int(2000/self.xlen)*self.xlen
+
+    def getmgny(self):
+        return int(2000/self.ylen)*self.ylen
