@@ -63,7 +63,7 @@ if meiro1.makeRoute():
 
 Depth Mapも同じく保存される。
 
-<img src="https://raw.githubusercontent.com/tkgwku/meiro-ilas-seminar-2017/master/output/solve/solve_200_201711091057.jpg" data-canonical-src="https://raw.githubusercontent.com/tkgwku/meiro-ilas-seminar-2017/master/output/solve/solve_200_201711091057_depthmap.jpg" width="200" height="200" alt="depth map" />
+<img src="https://raw.githubusercontent.com/tkgwku/meiro-ilas-seminar-2017/master/output/solve/solve_200_201711091057_depthmap.jpg" data-canonical-src="https://raw.githubusercontent.com/tkgwku/meiro-ilas-seminar-2017/master/output/solve/solve_200_201711091057_depthmap.jpg" width="200" height="200" alt="depth map" />
 
 ## Known Issue
 
