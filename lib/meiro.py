@@ -307,7 +307,7 @@ class SolveMeiro(object):
         self.xlen = int(width/boldness)
         self.ylen = int(height/boldness)
 
-        print('column: {0}, row: {1}'.format((self.ylen-1)/2, (self.xlen-1)/2))
+        print('[info] column: {0}, row: {1}'.format((self.ylen-1)/2, (self.xlen-1)/2))
         self.blocks = dict()
 
         #debug_string_array = ['' for i in range(0, self.ylen)]
@@ -415,7 +415,7 @@ class SolveMeiro(object):
 
         img2 = img2.resize((self.getmgnx(), self.getmgny()))
         img2.save(self.filename)
-        print('Successfully solved the meiro (saved to solve.jpg)')
+        print('[success] saved solution map.')
 
     def drawline(self, tpl, img2):
         to = tpl[0]
@@ -451,3 +451,63 @@ class SolveMeiro(object):
 
     def getmgny(self):
         return int(2000/self.ylen)*self.ylen
+
+    def createDepthMap(self):
+        self.depthMap = dict()
+        self.depthMapLoop((1, self.ylen-1), (0, 0), 0)
+        self.saveDepthMap()
+
+    def depthMapLoop(self, coord, fromCoord, depth):
+        nexts = list()
+
+        self.depthMap[coord] = depth
+
+        for x in range(0,4):
+            c = self.getcoord(coord, x)
+            if self.isout(c) or c == fromCoord:
+                continue
+            elif self.blocks[c] == 1: # space
+                nexts.append(x)
+
+        # 行き止まり
+        if len(nexts) == 0:
+            pass
+        # 交差点
+        elif len(nexts) >= 1:
+            for nextdir in nexts:
+                if self.getcoord(coord, nextdir) == self.goal:
+                    self.depthMap[self.goal] = depth+1
+                else:
+                    self.depthMapLoop(self.getcoord(coord, nextdir), coord, depth+1)
+
+    def saveDepthMap(self):
+        img2 = Image.new('RGB', (self.xlen, self.ylen))
+        maxdepth = max(self.depthMap.values())
+        for x, y in itertools.product(range(0, self.xlen), range(0, self.ylen)):
+            if self.blocks[(x,y)] != 1:
+                img2.putpixel((x,y), (60,60,60))
+            elif (x,y) in self.depthMap:
+                i = self.depthMap[(x,y)]
+                img2.putpixel((x,y), self.gradation(i, maxdepth))
+            else:
+                img2.putpixel((x,y), (255,255,255))
+        img2 = img2.resize((self.getmgnx(), self.getmgny()))
+        img2.save(self.filename.replace(".jpg", "_depthmap.jpg"))
+        print('[success] saved depth map.')
+
+    def gradation(self, i, m):
+        colors = [(181, 102, 255),(102, 191, 255),(42, 135, 0),(255, 255, 0),(234, 16, 74)]
+        l = len(colors)-1
+        ratio = i/m
+        for x in range(0,l):
+            if ratio >= x/l and ratio <= (x+1)/l:
+                beg = colors[x]
+                end = colors[x+1]
+                rat = (ratio*l)%1
+                r = (end[0]-beg[0])*rat+beg[0]
+                g = (end[1]-beg[1])*rat+beg[1]
+                b = (end[2]-beg[2])*rat+beg[2]
+                return (int(r),int(g),int(b))
+
+
+            

@@ -5,7 +5,7 @@ from time import gmtime, strftime
 import os
 
 ### Save As Image ###
-r = 200
+r = 270
 filename = 'output/meiro_{0}_{1}.jpg'.format(r, strftime("%Y%m%d%H%M", gmtime()))
 directory = os.path.dirname('output/')
 if not os.path.exists(directory):
