@@ -59,7 +59,7 @@ if meiro1.makeRoute():
 
 `solvemaze.py`を実行すれば、outputフォルダ内の迷路jpgから、正解を描き足したバージョンが作成されoutputフォルダ内に保存される。
 
-![solved 200\*200 maze](https://raw.githubusercontent.com/tkgwku/meiro-ilas-seminar-2017/master/output/solve_200_201711091057.jpg "solution sample")
+<img src="https://raw.githubusercontent.com/tkgwku/meiro-ilas-seminar-2017/master/output/solve_200_201711091057.jpg" data-canonical-src="https://raw.githubusercontent.com/tkgwku/meiro-ilas-seminar-2017/master/output/solve_200_201711091057.jpg" width="200" height="200" alt="solved maze" />
 
 ## Known Issue
 
