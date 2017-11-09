@@ -57,9 +57,13 @@ if meiro1.makeRoute():
 
 ## 迷路を解く
 
-`solvemaze.py`を実行すれば、outputフォルダ内の迷路jpgから、正解を描き足したバージョンが作成されoutputフォルダ内に保存される。
+`solvemaze.py`を実行すれば、outputフォルダ内の迷路jpgから、正解を描き足したバージョンが作成されoutput内のsolveフォルダ内に保存される。
 
-<img src="https://raw.githubusercontent.com/tkgwku/meiro-ilas-seminar-2017/master/output/solve_200_201711091057.jpg" data-canonical-src="https://raw.githubusercontent.com/tkgwku/meiro-ilas-seminar-2017/master/output/solve_200_201711091057.jpg" width="200" height="200" alt="solved maze" />
+<img src="https://raw.githubusercontent.com/tkgwku/meiro-ilas-seminar-2017/master/output/solve/solve_200_201711091057.jpg" data-canonical-src="https://raw.githubusercontent.com/tkgwku/meiro-ilas-seminar-2017/master/output/solve/solve_200_201711091057_depthmap.jpg" width="200" height="200" alt="solved maze" />
+
+Depth Mapも同じく保存される。
+
+<img src="https://raw.githubusercontent.com/tkgwku/meiro-ilas-seminar-2017/master/output/solve/solve_200_201711091057.jpg" data-canonical-src="https://raw.githubusercontent.com/tkgwku/meiro-ilas-seminar-2017/master/output/solve/solve_200_201711091057_depthmap.jpg" width="200" height="200" alt="depth map" />
 
 ## Known Issue
 
