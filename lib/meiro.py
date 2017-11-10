@@ -491,6 +491,8 @@ class SolveMeiro(object):
                 img2.putpixel((x,y), self.gradation(i, maxdepth))
             else:
                 img2.putpixel((x,y), (255,255,255))
+        if self.intersections:
+            self.tploop(self.goal, img2)
         img2 = img2.resize((self.getmgnx(), self.getmgny()))
         img2.save(self.filename.replace(".jpg", "_depthmap.jpg"))
         print('[success] saved depth map.')
