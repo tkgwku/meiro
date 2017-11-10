@@ -70,28 +70,26 @@ Depth Mapも同じく保存される。
 * 一定コラム以上の迷路の作成に時間がかかる
 
 ## 実装と仕様
-### class ImageMeiro
-- - -
+<h3 style="border-bottom:1px solid #eaecef;">class ImageMeiro</h3>
 画像形式の迷路を作成するクラス。
-### 引数
+#### 引数
 1. 正確に言うと路地の数。おおまかには迷路のサイズ。
 2. 画像のおおまかなサイズ(pixel単位)。画像は第二引数より少し大きめのサイズになる。
 3. 保存ファイルのパス。`save()`で保存される。
 4. スタート・ゴールの位置。`0`なら左下と右上、`1`なら上下真ん中、`2`なら上下のランダムな位置、`3`なら左右のランダムな位置。
 
-### class SolveMeiro
-- - -
+<h3 style="border-bottom:1px solid #eaecef;">class SolveMeiro</h3>
 迷路の解凍やDepth Mapを作成するクラス
-### 引数
+#### 引数
 1. 読み込む画像のパス。絶対パス(相対パスでなく)にするべき。
-### 関数
+
+#### 関数
 * `createSolutionMap(保存先のパス)`・・・solution mapを作成
 * `createDepthMap(保存先のパス, 色のタイプ, 解答のラインを描くか否か)`・・・depth mapを作成。色のタイプは現在0-2まで存在。
 
-## class AbstractMeiro
-- - -
+<h3 style="border-bottom:1px solid #eaecef;">class AbstractMeiro</h3>
 迷路自体の作成をするクラス。`save()`,`fillPoint()`などは抽象メソッド。
-### 引数
+#### 引数
 1. 横の路地の数
 2. 縦の路地の数
 3. 壁の間隔
