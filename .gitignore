@@ -5,3 +5,4 @@ TOKENS.json
 __pycache__
 *.bat
 *.xlsx
+_temp

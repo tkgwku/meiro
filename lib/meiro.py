@@ -464,7 +464,7 @@ class SolveMeiro(object):
             else:
                 img2.putpixel((x,y), (255,255,255))
         if drawsolution:
-            linecolors = [(255,0,150),(255, 68, 68),(4, 4, 219)]
+            linecolors = [(255,0,150),(255,0,150),(4, 4, 219)]
             self.intersections = list()
             self.loadintersections((1, self.ylen-1), (0, self.ylen), (1, self.ylen-1), 0)
             self.tploop(self.goal, img2, linecolors[gradationtype])
