@@ -9,7 +9,7 @@ from PIL import Image
 class AbstractMeiro(object):
     DEBUG = False
 
-    def __init__(self, column, row, interval, boldness):
+    def __init__(self, column, row, interval, boldness, entrancetype):
         self.column   = column   # horizontal pillars count plus 1
         self.row      = row      # vertical pillars count plus 1
         self.interval = interval # interval pixels
@@ -25,6 +25,9 @@ class AbstractMeiro(object):
         self.ms = 0
         self.timerStart()
 
+        self.white = (255,255,255)
+        self.black = (60,60,60)
+
         # parameter 1
         #self.phaseCount = int(max(column, row)/20)
         self.phaseCount = int(max(column, row)/40)
@@ -39,6 +42,19 @@ class AbstractMeiro(object):
                     break
 
         self.phaseLen = [len(x) for x in self.phaseUnoc]
+        if entrancetype == 1:
+            self.start = (int(self.column/2)*2-1, self.row*2)
+            self.goal = (int(self.column/2)*2-1, 0)
+        elif entrancetype == 2:
+            self.start = (random.randint(1, self.column)*2-1, self.row*2)
+            self.goal = (random.randint(1, self.column)*2-1, 0)
+        elif entrancetype == 3:
+            self.start = (self.column*2, random.randint(1, self.row)*2-1)
+            self.goal = (0, random.randint(1, self.row)*2-1)
+        else:
+            self.start = (self.column*2-1, 0)
+            self.goal = (1, self.row*2)
+
 
     def isIn(self, i, j, k):
         return min(i, self.column-i) < k*self.column/(2*self.phaseCount) or min(j, self.row-j) < k*self.row/(2*self.phaseCount)
@@ -90,9 +106,11 @@ class AbstractMeiro(object):
             print('{} seconds'.format(self.ms/1000))
         # make edge wall
         self.draw((0,0), (0, self.row))
-        self.draw((0,0), (self.column-1, 0))
+        self.draw((0,0), (self.column, 0))
         self.draw((self.column,0), (self.column, self.row))
-        self.draw((1,self.row), (self.column, self.row))
+        self.draw((0,self.row), (self.column, self.row))
+        self.fillPoint(self.start, self.white)
+        self.fillPoint(self.goal, self.white)
         return True
 
     '''
@@ -161,9 +179,22 @@ class AbstractMeiro(object):
     '''
     (tuple2, tuple2, tuple3)V
     fill canvas with certain color, from pillar to pillar
-    @abstractmethod
     '''
     def fillColor(self, fromPillar, toPillar, color):
+        leftX  = min(fromPillar[0], toPillar[0]) * (self.boldness + self.interval)
+        rightX = max(fromPillar[0], toPillar[0]) * (self.boldness + self.interval) + self.boldness # -1
+        ceilY   = min(fromPillar[1], toPillar[1]) * (self.boldness + self.interval)
+        bottomY = max(fromPillar[1], toPillar[1]) * (self.boldness + self.interval) + self.boldness # -1
+
+        for x, y in itertools.product(range(leftX, rightX), range(ceilY, bottomY)):
+            self.fillPoint((x,y), color)
+
+    '''
+    (tuple2, tuple3)V
+    fill canvas with certain color at certain position
+    @abstractmethod
+    '''
+    def fillPoint(self, pos, color):
         pass
 
     '''
@@ -171,7 +202,7 @@ class AbstractMeiro(object):
     draw line on canvas, from pillar to pillar
     '''
     def draw(self, fromPillar, toPillar):
-        self.fillColor(fromPillar, toPillar, (60, 60, 60))
+        self.fillColor(fromPillar, toPillar, self.black)
 
     def makeNewDirection(self, prev):
         # 0:up 1:down 2:left 3:right
@@ -254,8 +285,8 @@ class State():
 meiro saved as image
 '''
 class ImageMeiro(AbstractMeiro, object):
-    def __init__(self, columns, size, fileName):
-        super(ImageMeiro, self).__init__(columns, columns, 1, 1)
+    def __init__(self, columns, size, fileName, entrancetype):
+        super(ImageMeiro, self).__init__(columns, columns, 1, 1, entrancetype)
 
         self.fileName = fileName
 
@@ -264,16 +295,10 @@ class ImageMeiro(AbstractMeiro, object):
         self.img = Image.new('RGB', (width, width)) # canvas
 
         for i, j in itertools.product(range(0, width), range(0, width)):
-            self.img.putpixel((i,j), (255,255,255)) # make white canvas
+            self.img.putpixel((i,j), self.white) # make white canvas
 
-    def fillColor(self, fromPillar, toPillar, color):
-        leftX  = min(fromPillar[0], toPillar[0]) * 2
-        rightX = max(fromPillar[0], toPillar[0]) * 2 + 1 # -1
-        ceilY   = min(fromPillar[1], toPillar[1]) * 2
-        bottomY = max(fromPillar[1], toPillar[1]) * 2 + 1 # -1
-
-        for x, y in itertools.product(range(leftX, rightX), range(ceilY, bottomY)):
-            self.img.putpixel((x,y), color)
+    def fillPoint(self, pos, color):
+        self.img.putpixel(pos, color)
 
     '''
     ()V
@@ -292,28 +317,76 @@ class SolveMeiro(object):
         width, height = img.size
         print('[info] width: {1}px, height: {2}px'.format(path, width, height))
 
-        boldness = 0
+        boldness = None
+        temp = None
 
         for x in range(0, width):
             if not self.isBlack(img.getpixel((x, height-1))):
-                if x == 0:
-                    print('error l33')
-                    quit()
-                else:
-                    boldness = x
+                if not temp:
+                    temp = x
+            else:
+                if temp:
+                    boldness = x - temp
                     break
+        if not boldness:
+            temp = None
+            for y in range(0, height):
+                if not self.isBlack(img.getpixel((0,y))):
+                    if not temp:
+                        temp = y
+                else:
+                    if temp:
+                        boldness = y - temp
+                        break
+        if not boldness:
+            temp = None
+            for x in range(0, width):
+                if not self.isBlack(img.getpixel((x, 0))):
+                    if temp:
+                        temp = x
+                else:
+                    if temp:
+                        boldness = x - temp
+                        break
+
 
         self.xlen = int(width/boldness)
         self.ylen = int(height/boldness)
 
+        if self.xlen == 0:
+            print('[error l328] Couldn\'t resolve the boldness')
+            quit()
+
         print('[info] column: {0}, row: {1}'.format(int((self.ylen-1)/2), int((self.xlen-1)/2)))
         self.blocks = dict()
+
+        self.start = None
+        self.goal = None
+
+        self.white = (255,255,255)
+        self.black = (60,60,60)
+
+        self.intersections = None
 
         #debug_string_array = ['' for i in range(0, self.ylen)]
 
         for i, j in itertools.product(range(0, self.xlen), range(0, self.ylen)):
-            self.blocks[(i,j)] = 0 if self.isWall((i,j), img, boldness) else 1 # 0 means that area plays role of wall
+            d = 0 if self.isWall((i,j), img, boldness) else 1 # 0 means that area plays role of wall
+            self.blocks[(i,j)] = d
+            if i == 0 or j == 0 or i == self.xlen-1 or j == self.ylen-1:
+                if d == 1:
+                    if self.start:
+                        self.goal = (i,j)
+                    elif not self.goal:
+                        self.start = (i,j)
+                    else:
+                        print('[error] There are more than two entrances!')
+                        quit()
             #debug_string_array[j] += '_' if not self.isWall((i,j)) else 'X'
+
+        if not self.start or not self.goal:
+            print('[error] There is no start or goal!')
+            quit()
 
         #debugStr = ''
         #for line in debug_string_array:
@@ -321,11 +394,9 @@ class SolveMeiro(object):
 
         #print(debugStr)
 
-        self.goal = (self.xlen-2, 0)
-
     def createSolutionMap(self, filename):
         self.intersections = list()
-        self.loadintersections((1, self.ylen-1), (0, self.ylen), (1, self.ylen-1), 0)
+        self.loadintersections(self.start, None, self.start, 0)
         self.save(filename)
 
     def isBlack(self, rgb):
@@ -403,9 +474,9 @@ class SolveMeiro(object):
 
         for x, y in itertools.product(range(0, self.xlen), range(0, self.ylen)):
             if self.blocks[(x,y)] == 1:
-                img2.putpixel((x,y), (255,255,255))
+                img2.putpixel((x,y), self.white)
             else:
-                img2.putpixel((x,y), (60,60,60))
+                img2.putpixel((x,y), self.black)
 
         #print(intersections)
 
@@ -452,21 +523,22 @@ class SolveMeiro(object):
 
     def createDepthMap(self, depthfilename, gradationtype, drawsolution):
         self.depthMap = dict()
-        self.depthMapLoop((1, self.ylen-1), (0, 0), 0)
+        self.depthMapLoop(self.start, None, 0)
         img2 = Image.new('RGB', (self.xlen, self.ylen))
         maxdepth = max(self.depthMap.values())
         for x, y in itertools.product(range(0, self.xlen), range(0, self.ylen)):
             if self.blocks[(x,y)] != 1:
-                img2.putpixel((x,y), (60,60,60))
+                img2.putpixel((x,y), self.black)
             elif (x,y) in self.depthMap:
                 i = self.depthMap[(x,y)]
                 img2.putpixel((x,y), self.lineargradation(i, maxdepth, gradationtype))
             else:
-                img2.putpixel((x,y), (255,255,255))
+                img2.putpixel((x,y), self.white)
         if drawsolution:
             linecolors = [(255,0,150),(255,0,150),(4, 4, 219)]
-            self.intersections = list()
-            self.loadintersections((1, self.ylen-1), (0, self.ylen), (1, self.ylen-1), 0)
+            if not self.intersections:
+                self.intersections = list()
+                self.loadintersections(self.start, None, self.start, 0)
             self.tploop(self.goal, img2, linecolors[gradationtype])
         img2 = img2.resize((self.getmgnx(), self.getmgny()))
         img2.save(depthfilename)

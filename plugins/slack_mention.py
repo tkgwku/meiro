@@ -32,7 +32,7 @@ def meiroResponce(message, arg):
     if len(args) > 1:
         column = parseInt(args[1], 100)
 
-    meiro1 = meiro.ImageMeiro(column, 480, meiropath)
+    meiro1 = meiro.ImageMeiro(column, 480, meiropath, 0)
     message.reply('creating a {0}*{0} maze...'.format(column))
 
     if meiro1.makeRoute():

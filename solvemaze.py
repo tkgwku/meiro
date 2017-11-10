@@ -27,4 +27,5 @@ for f in files:
             if not os.path.exists(solutionpath):
                 solve1.createSolutionMap(os.path.abspath(solutionpath))
             if not os.path.exists(depthpath):
-                solve1.createDepthMap(os.path.abspath(depthpath), 2, True)
+                solve1.createDepthMap(os.path.abspath(depthpath), 0, True)
+                #solve1.createDepthMap(os.path.abspath(depthpath), 2, False)
