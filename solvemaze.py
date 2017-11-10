@@ -7,25 +7,22 @@ from lib import meiro
 
 sys.setrecursionlimit(100000)
 
-indir = os.path.dirname(os.path.abspath(__name__))
 directory = os.path.dirname('output/')
 if not os.path.exists(directory):
-	print('there isn\'t \"output\" directory')
-	quit()
-directory2 = os.path.dirname('output/solve/')
+    print('there isn\'t \"output\" directory')
+    quit()
+directory2 = os.path.dirname('output/solution/')
 if not os.path.exists(directory2):
     os.makedirs(directory2)
 files = os.listdir(directory)
-meiros = list()
-solves = list()
 for f in files:
-    if re.match(r'meiro_.+', f):
-        meiros.append(f)
-    elif re.match(r'solve_.+', f):
-        solves.append(f[6:])
-
-for meirofile in meiros:
-    if not meirofile[6:] in solves:
-        solve1 = meiro.SolveMeiro(indir+'/'+directory+'/'+meirofile, indir+'/'+directory2+'/solve_'+meirofile[6:])
-        solve1.solve()
-        solve1.createDepthMap()
+    m = re.match(r'meiro_(.+)', f)
+    if m:
+        solutionpath = directory2+'/solutionmap_'+m.group(1)
+        depthpath = directory2+'/depthmap_'+m.group(1)
+        if (not os.path.exists(solutionpath)) or (not os.path.exists(depthpath)):
+            solve1 = meiro.SolveMeiro(os.path.abspath(directory+'/'+f))
+            if not os.path.exists(solutionpath):
+                solve1.createSolutionMap(os.path.abspath(solutionpath))
+            if not os.path.exists(depthpath):
+                solve1.createDepthMap(os.path.abspath(depthpath), 0, True)

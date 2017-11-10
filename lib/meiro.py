@@ -286,12 +286,11 @@ class ImageMeiro(AbstractMeiro, object):
 
 
 class SolveMeiro(object):
-    def __init__(self, path, filename):
-        self.filename = filename
-        print('[loading] {} ...'.format(path))
+    def __init__(self, path):
+        print('[load] {} ...'.format(path))
         img = Image.open(path, 'r')
         width, height = img.size
-        print('[loaded] {0} ... (width: {1}px, height: {2}px)'.format(path, width, height))
+        print('[info] width: {1}px, height: {2}px'.format(path, width, height))
 
         boldness = 0
 
@@ -307,7 +306,7 @@ class SolveMeiro(object):
         self.xlen = int(width/boldness)
         self.ylen = int(height/boldness)
 
-        print('[info] column: {0}, row: {1}'.format((self.ylen-1)/2, (self.xlen-1)/2))
+        print('[info] column: {0}, row: {1}'.format(int((self.ylen-1)/2), int((self.xlen-1)/2)))
         self.blocks = dict()
 
         #debug_string_array = ['' for i in range(0, self.ylen)]
@@ -324,9 +323,10 @@ class SolveMeiro(object):
 
         self.goal = (self.xlen-2, 0)
 
-    def solve(self):
+    def createSolutionMap(self, filename):
         self.intersections = list()
         self.loadintersections((1, self.ylen-1), (0, self.ylen), (1, self.ylen-1), 0)
+        self.save(filename)
 
     def isBlack(self, rgb):
         return rgb[0] < 120 and rgb[1] < 120 and rgb[2] < 120
@@ -381,7 +381,6 @@ class SolveMeiro(object):
                 tup = (self.goal, previs, prevdir)
                 self.intersections.append(tup)
                 # print(intersections)
-                self.save()
             else:
                 self.loadintersections(self.getcoord(coord, nexts[0]), coord, previs, prevdir)
         # 行き止まり
@@ -396,11 +395,10 @@ class SolveMeiro(object):
                     tup = (self.goal, coord, nextdir)
                     self.intersections.append(tup)
                     # print(intersections)
-                    self.save()
                 else:
                     self.loadintersections(self.getcoord(coord, nextdir), coord, coord, nextdir)
 
-    def save(self):
+    def save(self, filename):
         img2 = Image.new('RGB', (self.xlen, self.ylen))
 
         for x, y in itertools.product(range(0, self.xlen), range(0, self.ylen)):
@@ -411,40 +409,40 @@ class SolveMeiro(object):
 
         #print(intersections)
 
-        self.tploop(self.goal, img2)
+        self.tploop(self.goal, img2, (255,0,150))
 
         img2 = img2.resize((self.getmgnx(), self.getmgny()))
-        img2.save(self.filename)
+        img2.save(filename)
         print('[success] saved solution map.')
 
-    def drawline(self, tpl, img2):
+    def drawline(self, tpl, img2, rgb):
         to = tpl[0]
         fro = tpl[1]
         dire = tpl[2]
-        img2.putpixel(fro, (255,0,150))
+        img2.putpixel(fro, rgb)
         c1 = self.getcoord(fro, dire)
-        self.loop(c1, fro, to, img2)
+        self.loop(c1, fro, to, img2, rgb)
 
-    def loop(self, coord, fromCoord, to, img2):
+    def loop(self, coord, fromCoord, to, img2, rgb):
         if coord == to:
-            img2.putpixel(to, (255,0,150))
+            img2.putpixel(to, rgb)
         else:
             for x in range(0,4):
                 c2 = self.getcoord(coord, x)
                 if self.isout(c2) or c2 == fromCoord:
                     pass
                 elif c2 == to:
-                    img2.putpixel(coord, (255,0,150))
-                    img2.putpixel(to, (255,0,150))
+                    img2.putpixel(coord, rgb)
+                    img2.putpixel(to, rgb)
                 elif self.blocks[c2] == 1: # space
-                    img2.putpixel(coord, (255,0,150))
-                    self.loop(c2, coord, to, img2)
+                    img2.putpixel(coord, rgb)
+                    self.loop(c2, coord, to, img2, rgb)
 
-    def tploop(self, coord,img2):
+    def tploop(self, coord, img2, rgb):
         for tpl in self.intersections:
             if tpl[0] == coord:
-                self.drawline(tpl, img2)
-                self.tploop(tpl[1],img2)
+                self.drawline(tpl, img2, rgb)
+                self.tploop(tpl[1], img2, rgb)
 
     def getmgnx(self):
         return int(2000/self.xlen)*self.xlen
@@ -452,10 +450,27 @@ class SolveMeiro(object):
     def getmgny(self):
         return int(2000/self.ylen)*self.ylen
 
-    def createDepthMap(self):
+    def createDepthMap(self, depthfilename, gradationtype, drawsolution):
         self.depthMap = dict()
         self.depthMapLoop((1, self.ylen-1), (0, 0), 0)
-        self.saveDepthMap()
+        img2 = Image.new('RGB', (self.xlen, self.ylen))
+        maxdepth = max(self.depthMap.values())
+        for x, y in itertools.product(range(0, self.xlen), range(0, self.ylen)):
+            if self.blocks[(x,y)] != 1:
+                img2.putpixel((x,y), (60,60,60))
+            elif (x,y) in self.depthMap:
+                i = self.depthMap[(x,y)]
+                img2.putpixel((x,y), self.lineargradation(i, maxdepth, gradationtype))
+            else:
+                img2.putpixel((x,y), (255,255,255))
+        if drawsolution:
+            linecolors = [(255,0,150),(255, 68, 68),(4, 4, 219)]
+            self.intersections = list()
+            self.loadintersections((1, self.ylen-1), (0, self.ylen), (1, self.ylen-1), 0)
+            self.tploop(self.goal, img2, linecolors[gradationtype])
+        img2 = img2.resize((self.getmgnx(), self.getmgny()))
+        img2.save(depthfilename)
+        print('[success] saved depth map.')
 
     def depthMapLoop(self, coord, fromCoord, depth):
         nexts = list()
@@ -480,25 +495,13 @@ class SolveMeiro(object):
                 else:
                     self.depthMapLoop(self.getcoord(coord, nextdir), coord, depth+1)
 
-    def saveDepthMap(self):
-        img2 = Image.new('RGB', (self.xlen, self.ylen))
-        maxdepth = max(self.depthMap.values())
-        for x, y in itertools.product(range(0, self.xlen), range(0, self.ylen)):
-            if self.blocks[(x,y)] != 1:
-                img2.putpixel((x,y), (60,60,60))
-            elif (x,y) in self.depthMap:
-                i = self.depthMap[(x,y)]
-                img2.putpixel((x,y), self.gradation(i, maxdepth))
-            else:
-                img2.putpixel((x,y), (255,255,255))
-        if self.intersections:
-            self.tploop(self.goal, img2)
-        img2 = img2.resize((self.getmgnx(), self.getmgny()))
-        img2.save(self.filename.replace(".jpg", "_depthmap.jpg"))
-        print('[success] saved depth map.')
-
-    def gradation(self, i, m):
-        colors = [(181, 102, 255),(102, 191, 255),(42, 135, 0),(255, 255, 0),(234, 16, 74)]
+    def lineargradation(self, i, m, gradationtype):
+        grads = [
+            [(181, 102, 255),(102, 191, 255),(42, 135, 0),(255, 255, 0),(234, 16, 74)],
+            [(75,0,130),(0,0,255),(0,255,0),(255,255,0),(255,127,0),(255,0,0)],
+            [(0,255,255),(255,255,255),(255,0,255)]
+        ]
+        colors = grads[gradationtype]
         l = len(colors)-1
         ratio = i/m
         for x in range(0,l):
