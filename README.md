@@ -56,7 +56,7 @@ if meiro1.makeRoute():
 
 `makemaze.py`はコマンドライン引数で`-c`/`-column`でコラム数を、`-s`/`-size`で画像のサイズ(px)を、`-e`/`-entrancetype`でスタートとゴールの位置のタイプ(実装と仕様にて詳解)を指定できる。
 
-```
+```Batchfile
 python makemaze.py -c 200 -e 2
 ```
 
@@ -72,7 +72,7 @@ Depth Mapも同じく保存される。
 
 `solvemaze.py`はコマンドライン引数で`-c`/`-colortype`で塗り分けのタイプを、`-d`/`-drawanswer`で解答のラインを描画するか否かを指定できる。
 
-```
+```Batchfile
 python solvemaze.py -c 2 -d False
 ```
 
