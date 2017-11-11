@@ -98,11 +98,11 @@ class AbstractMeiro(object):
                 if AbstractMeiro.DEBUG:
                     for pillar in self.pillarsUnoc:
                         self.fillColor(pillar, pillar, (0, 255, 0))
-                    break
                 return False
         self.timerStop()
         if AbstractMeiro.DEBUG:
-            print('[debug] {} seconds'.format(self.ms/1000))
+            print('[debug] took {} seconds'.format(self.ms/1000))
+            print('[debug] took {} counts'.format(self.finishcount))
         # make edge wall
         self.draw((0,0), (0, self.row))
         self.draw((0,0), (self.column, 0))
@@ -296,9 +296,9 @@ class ImageMeiro(AbstractMeiro, object):
         for i, j in itertools.product(range(0, width), range(0, width)):
             self.img.putpixel((i,j), self.white) # make white canvas
 
-        print('[info] columns       : {}'.format(columns))
-        print('[info] pixels        : {0}*{0}'.format(self.magn))
-        print('[info] entrancetype  : {}'.format(entrancetype))
+        print('[info] columns      : {}'.format(columns))
+        print('[info] pixels       : {0}*{0}'.format(self.magn))
+        print('[info] entrancetype : {}'.format(entrancetype))
 
     def fillPoint(self, pos, color):
         self.img.putpixel(pos, color)

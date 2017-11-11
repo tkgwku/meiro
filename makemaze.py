@@ -20,17 +20,17 @@ px = 2000
 et = 0
 
 if command_arguments.c:
-	r = command_arguments.c
+    r = command_arguments.c
 if command_arguments.column:
-	r = command_arguments.column
+    r = command_arguments.column
 if command_arguments.s:
-	px = command_arguments.s
+    px = command_arguments.s
 if command_arguments.size:
-	px = command_arguments.size
+    px = command_arguments.size
 if command_arguments.e:
-	et = command_arguments.e
+    et = command_arguments.e
 if command_arguments.entrancetype:
-	et = command_arguments.entrancetype
+    et = command_arguments.entrancetype
 
 ### Save As Image ###
 directory = os.path.dirname('output/')
