@@ -55,7 +55,6 @@ class AbstractMeiro(object):
             self.start = (self.column*2-1, 0)
             self.goal = (1, self.row*2)
 
-
     def isIn(self, i, j, k):
         return min(i, self.column-i) < k*self.column/(2*self.phaseCount) or min(j, self.row-j) < k*self.row/(2*self.phaseCount)
 
@@ -65,7 +64,7 @@ class AbstractMeiro(object):
     '''
     def makeRoute(self):
         if self.column < 0 or self.row < 0:
-            print('error: Invalid argument!')
+            print('[error] invalid argument of column or row')
             return False
 
         _count = 0
@@ -73,11 +72,11 @@ class AbstractMeiro(object):
         prevDir = -1
         phase = 0
         maxSearchCount = 1000000
-        print('starting {0}*{1} meiro making...'.format(self.column, self.row))
+        print('[info] generating {0}*{1} maze...'.format(self.column, self.row))
         while True:
             if phase < self.phaseCount-1 and len(self.phaseUnoc[phase]) < self.phaseLen[phase]/5: # parameter 2
                 phase += 1
-                print('phase {0}/{1}... ({2} sec)'.format(phase, self.phaseCount-1, int(time.time() * 100 - self.ms/10)/100))
+                print('[info] phase {0}/{1}... ({2} sec)'.format(phase, self.phaseCount-1, int(time.time() * 100 - self.ms/10)/100))
 
             if pillar == (0,0):
                 pillar = self.getUnocPillarRandomly(phase)
@@ -94,7 +93,7 @@ class AbstractMeiro(object):
 
             _count += 1
             if _count > maxSearchCount:
-                print('[error l61] Something went wrong!')
+                print('[error] detected excessive loop. generating will stop...')
                 ## debug ##
                 if AbstractMeiro.DEBUG:
                     for pillar in self.pillarsUnoc:
@@ -103,7 +102,7 @@ class AbstractMeiro(object):
                 return False
         self.timerStop()
         if AbstractMeiro.DEBUG:
-            print('{} seconds'.format(self.ms/1000))
+            print('[debug] {} seconds'.format(self.ms/1000))
         # make edge wall
         self.draw((0,0), (0, self.row))
         self.draw((0,0), (self.column, 0))
@@ -297,6 +296,10 @@ class ImageMeiro(AbstractMeiro, object):
         for i, j in itertools.product(range(0, width), range(0, width)):
             self.img.putpixel((i,j), self.white) # make white canvas
 
+        print('[info] columns       : {}'.format(columns))
+        print('[info] pixels        : {0}*{0}'.format(self.magn))
+        print('[info] entrancetype  : {}'.format(entrancetype))
+
     def fillPoint(self, pos, color):
         self.img.putpixel(pos, color)
 
@@ -307,15 +310,18 @@ class ImageMeiro(AbstractMeiro, object):
     def save(self):
         self.img = self.img.resize((self.magn, self.magn))
         self.img.save(self.fileName)
-        print('saved as {0} ({1}*{1} pixel)'.format(self.fileName, self.magn))
+        print('[save] saved as \'{}\''.format(self.fileName))
 
 
 class SolveMeiro(object):
     def __init__(self, path):
-        print('[load] {} ...'.format(path))
-        img = Image.open(path, 'r')
+        try:
+            img = Image.open(path, 'r')
+        except Exception as e:
+            print('[error] '+e.strerror)
+            quit()
+
         width, height = img.size
-        print('[info] width: {1}px, height: {2}px'.format(path, width, height))
 
         boldness = None
         temp = None
@@ -354,10 +360,9 @@ class SolveMeiro(object):
         self.ylen = int(height/boldness)
 
         if self.xlen == 0:
-            print('[error l328] Couldn\'t resolve the boldness')
+            print('[error] couldn\'t resolve the boldness')
             quit()
 
-        print('[info] column: {0}, row: {1}'.format(int((self.ylen-1)/2), int((self.xlen-1)/2)))
         self.blocks = dict()
 
         self.start = None
@@ -380,12 +385,12 @@ class SolveMeiro(object):
                     elif not self.goal:
                         self.start = (i,j)
                     else:
-                        print('[error] There are more than two entrances!')
+                        print('[error] more than two entrances are detected')
                         quit()
             #debug_string_array[j] += '_' if not self.isWall((i,j)) else 'X'
 
         if not self.start or not self.goal:
-            print('[error] There is no start or goal!')
+            print('[error] no start or goal is detected')
             quit()
 
         #debugStr = ''
@@ -393,6 +398,11 @@ class SolveMeiro(object):
         #    debugStr += line + '\n'
 
         #print(debugStr)
+
+        print('[load] loaded   : \'{}\''.format(path))
+        print('[info] size     : {0}px * {1}px'.format(width, height))
+        print('[info] columns  : {0} * {1}'.format((self.ylen-1)/2, (self.xlen-1)/2))
+        print('[info] entrance : {0}, {1}'.format(self.start, self.goal))
 
     def createSolutionMap(self, filename):
         self.intersections = list()
@@ -484,7 +494,7 @@ class SolveMeiro(object):
 
         img2 = img2.resize((self.getmgnx(), self.getmgny()))
         img2.save(filename)
-        print('[success] saved solution map.')
+        print('[save] saved solution map.')
 
     def drawline(self, tpl, img2, rgb):
         to = tpl[0]
@@ -522,6 +532,8 @@ class SolveMeiro(object):
         return int(2000/self.ylen)*self.ylen
 
     def createDepthMap(self, depthfilename, gradationtype, drawsolution):
+        print('[info] gradation type : {}'.format(gradationtype))
+        print('[info] draw solution  : {}'.format(drawsolution))
         self.depthMap = dict()
         self.depthMapLoop(self.start, None, 0)
         img2 = Image.new('RGB', (self.xlen, self.ylen))
@@ -542,7 +554,7 @@ class SolveMeiro(object):
             self.tploop(self.goal, img2, linecolors[gradationtype])
         img2 = img2.resize((self.getmgnx(), self.getmgny()))
         img2.save(depthfilename)
-        print('[success] saved depth map.')
+        print('[save] saved depth map.')
 
     def depthMapLoop(self, coord, fromCoord, depth):
         nexts = list()

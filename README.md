@@ -54,6 +54,12 @@ if meiro1.makeRoute():
 
 を実行すれば、200\*200の迷路が保存される。 ちゃんとlib内のmeiro.pyをimportしてね！   
 
+`makemaze.py`はコマンドライン引数で`-c`/`-column`でコラム数を、`-s`/`-size`で画像のサイズ(px)を、`-e`/`-entrancetype`でスタートとゴールの位置のタイプ(実装と仕様にて詳解)を指定できる。
+
+```
+python makemaze.py -c 200 -e 2
+```
+
 ## 迷路を解く
 
 `solvemaze.py`を実行すれば、outputフォルダ内の迷路jpgから、正解を描き足したバージョンが作成されoutput内のsolutionフォルダ内に保存される。
@@ -63,6 +69,12 @@ if meiro1.makeRoute():
 Depth Mapも同じく保存される。
 
 <img src="https://raw.githubusercontent.com/tkgwku/meiro-ilas-seminar-2017/master/output/solution/depthmap_200_201711091057.jpg" data-canonical-src="https://raw.githubusercontent.com/tkgwku/meiro-ilas-seminar-2017/master/output/solution/depthmap_200_201711091057.jpg" width="200" height="200" alt="depth map" />
+
+`solvemaze.py`はコマンドライン引数で`-c`/`-colortype`で塗り分けのタイプを、`-d`/`-drawanswer`で解答のラインを描画するか否かを指定できる。
+
+```
+python solvemaze.py -c 2 -d False
+```
 
 ## Known Issue
 
