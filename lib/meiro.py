@@ -406,7 +406,7 @@ class SolveMeiro(object):
 
     def createSolutionMap(self, filename):
         self.intersections = list()
-        self.loadintersections(self.start, None, self.start, 0)
+        self.loadintersections(self.start, None, None, None)
         self.save(filename)
 
     def isBlack(self, rgb):
@@ -470,7 +470,8 @@ class SolveMeiro(object):
         # 交差点
         elif len(nexts) > 1:
             tup = (coord, previs, prevdir)
-            self.intersections.append(tup)
+            if previs:
+                self.intersections.append(tup)
             for nextdir in nexts:
                 if self.getcoord(coord, nextdir) == self.goal:
                     tup = (self.goal, coord, nextdir)
@@ -491,6 +492,7 @@ class SolveMeiro(object):
         #print(intersections)
 
         self.tploop(self.goal, img2, (255,0,150))
+        img2.putpixel(self.start, (255,0,150))
 
         img2 = img2.resize((self.getmgnx(), self.getmgny()))
         img2.save(filename)
@@ -550,8 +552,9 @@ class SolveMeiro(object):
             linecolors = [(255,0,150),(255,0,150),(4, 4, 219)]
             if not self.intersections:
                 self.intersections = list()
-                self.loadintersections(self.start, None, self.start, 0)
+                self.loadintersections(self.start, None, None, None)
             self.tploop(self.goal, img2, linecolors[gradationtype])
+            img2.putpixel(self.start, (255,0,150))
         img2 = img2.resize((self.getmgnx(), self.getmgny()))
         img2.save(depthfilename)
         print('[save] saved depth map.')
@@ -592,7 +595,7 @@ class SolveMeiro(object):
             if ratio >= x/l and ratio <= (x+1)/l:
                 beg = colors[x]
                 end = colors[x+1]
-                rat = (ratio*l)%1
+                rat = (ratio*l)%1.001
                 r = (end[0]-beg[0])*rat+beg[0]
                 g = (end[1]-beg[1])*rat+beg[1]
                 b = (end[2]-beg[2])*rat+beg[2]
