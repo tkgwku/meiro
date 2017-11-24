@@ -64,11 +64,11 @@ python makemaze.py -c 200 -e 2
 
 `solvemaze.py`を実行すれば、outputフォルダ内の迷路jpgから、正解を描き足したバージョンが作成されoutput内のsolutionフォルダ内に保存される。
 
-<img src="https://raw.githubusercontent.com/tkgwku/meiro-ilas-seminar-2017/master/output/solution/solutionmap_200_201711091057.jpg" data-canonical-src="https://raw.githubusercontent.com/tkgwku/meiro-ilas-seminar-2017/master/output/solution/solutionmap_200_201711091057.jpg" width="200" height="200" alt="solved maze" />
+<img src="https://raw.githubusercontent.com/tkgwku/meiro-ilas-seminar-2017/master/output/solution/solutionmap_200_201711240436.jpg" data-canonical-src="https://raw.githubusercontent.com/tkgwku/meiro-ilas-seminar-2017/master/output/solution/solutionmap_200_201711240436.jpg" width="200" height="200" alt="solved maze" />
 
 Depth Mapも同じく保存される。
 
-<img src="https://raw.githubusercontent.com/tkgwku/meiro-ilas-seminar-2017/master/output/solution/depthmap_200_201711091057.jpg" data-canonical-src="https://raw.githubusercontent.com/tkgwku/meiro-ilas-seminar-2017/master/output/solution/depthmap_200_201711091057.jpg" width="200" height="200" alt="depth map" />
+<img src="https://raw.githubusercontent.com/tkgwku/meiro-ilas-seminar-2017/master/output/solution/depthmap_200_201711240436.jpg" data-canonical-src="https://raw.githubusercontent.com/tkgwku/meiro-ilas-seminar-2017/master/output/solution/depthmap_200_201711240436.jpg" width="200" height="200" alt="depth map" />
 
 `solvemaze.py`はコマンドライン引数で`-c`/`-colortype`で塗り分けのタイプを、`-d`/`-drawanswer`で解答のラインを描画するか否かを指定できる。
 

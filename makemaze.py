@@ -1,5 +1,6 @@
 # coding: utf-8
 
+import sys
 from lib import meiro
 from time import gmtime, strftime
 import os
@@ -31,6 +32,8 @@ if command_arguments.e:
     et = command_arguments.e
 if command_arguments.entrancetype:
     et = command_arguments.entrancetype
+
+sys.setrecursionlimit(100000)
 
 ### Save As Image ###
 directory = os.path.dirname('output/')
