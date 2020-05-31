@@ -93,7 +93,7 @@ python solvemaze.py -c 2 -d False
 ### class SolveMeiro
 迷路の解凍やDepth Mapを作成するクラス
 #### 引数
-1. 読み込む画像のパス。絶対パス(相対パスでなく)にするべき。
+1. 読み込む画像のパス
 
 #### 関数
 * `createSolutionMap(保存先のパス)`・・・solution mapを作成
